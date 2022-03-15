@@ -1,0 +1,6 @@
+mytuple1 = ('True', 'True', 'True')
+mytuple2 = (1, 0, 1)
+mytuple3 = (1, 1, 1)
+print(all(mytuple1))
+print(all(mytuple2))
+print(all(mytuple3))
