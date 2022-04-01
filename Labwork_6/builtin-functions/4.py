@@ -1,5 +1,12 @@
-import math 
+from time import sleep
+import math
 
-a = int(input())
-b = int(input())
-print('Square root of', a, 'after', b, 'milliseconds is', math.sqrt(a))
+def func(n, milliseconds):
+    sleep(milliseconds/1000)
+    return math.sqrt(n)
+
+n = int(input())
+milliseconds = int(input())
+ans = func(n, milliseconds)
+
+print('Square root of', n, 'after', milliseconds, 'millisecond is', ans)
