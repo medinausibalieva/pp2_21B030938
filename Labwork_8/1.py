@@ -116,4 +116,4 @@ def game_over(x, y):
                     main()
         pygame.display.update()
 main()
-game_over(70, 200)
+game_over(70, 200) 
