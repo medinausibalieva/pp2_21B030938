@@ -10,6 +10,7 @@ def enemy(x, y, IMG, d):
     y += d
 ok = True
 
+# check collision
 def collision(x1, x2, y1, y2):
     global ok
     d = ((x1-x2)**2 + (y1-y2)**2)**0.5
@@ -45,10 +46,12 @@ def show_score(x, y):
     global score
     s = score_font.render(f'{score}', True, (0, 0, 255))
     screen.blit(s, (x, y))
+
 coinIMG = pygame.transform.smoothscale(pygame.image.load('coin.png'), (50,50))
 def coin(x, y):
     screen.blit(coinIMG, (x, y))
 ok = True
+# main function
 def main():
     global score
     score = 0
@@ -59,7 +62,7 @@ def main():
     enemy_speed = 2.5
     player_change = 0
     playerX, playerY = 178, 500
-    while not collision(playerX, enemyX, playerY, enemyY):
+    while not collision(playerX, enemyX, playerY, enemyY) and coinX != enemyX:
         screen.blit(bgIMG, (0, 0))
         show_score(370, 50)
         enemyY += enemy_speed
@@ -72,7 +75,7 @@ def main():
                 player_change = -3
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
-                    player_change = 0
+                    player_change = 0            
         screen.blit(playerIMG, (playerX, playerY))
         playerX += player_change
         coinY += coin_speed
@@ -95,6 +98,7 @@ def main():
         enemy(enemyX, enemyY, enemyIMG, enemy_speed)
         coin(coinX, coinY)
         pygame.display.update()
+
 #game over and restart
 def game_over(x, y):
     global ok, score

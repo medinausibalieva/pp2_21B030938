@@ -1,9 +1,37 @@
+import psycopg2
 import random
 import pygame, time
 
 pygame.init()
 
-# Colors
+username = input()
+score = 0
+level = 1
+
+conn = psycopg2.connect(
+    host='localhost',
+    database='postgres',
+    user='postgres',
+    password='21B030938'
+)
+
+sql = """
+SELECT exists(select 1 from game where username=%s)
+"""
+cur = conn.cursor()
+cur.execute(sql, (username,))
+result = cur.fetchone()
+if result[0]:
+    sql = "select level from game where username = %s"
+    cur.execute(sql, (username,))
+    num = cur.fetchone()
+    level = num[0]
+else:
+    sql = "insert into game (username, level) values (%s, %s)"
+    cur.execute(sql, (username, level))
+    conn.commit()
+
+# colors
 BLUE = (0, 0, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -11,14 +39,16 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
 screen = pygame.display.set_mode((800, 600))
+screen.fill(WHITE)
 background = pygame.transform.smoothscale(pygame.image.load('bk2.jpg'), (800, 600))
-pygame.display.set_caption('SNAKE GAME')
+pygame.display.set_caption('SNAKE')
+clock = pygame.time.Clock()
 
 font = pygame.font.SysFont('Verdana', 60)
 game_over = font.render("Game Over", True, RED)
 font1 = pygame.font.SysFont('Verdana', 14)
 levele = font1.render("LEVEL = ", True, BLACK)
-scoree = font1.render("SCORE = ", True, BLACK)
+scorere = font1.render("SCORE = ", True, BLACK)
 
 class Snake:
     global level, score
@@ -52,8 +82,15 @@ class Snake:
 
         self.elements[0][0] += self.dx
         self.elements[0][1] += self.dy
-
-        if self.elements[0][0] > 790 or self.elements[0][0] < 20:
+        # collision with walls
+        if self.elements[0][0] > 715 or self.elements[0][0] < 45:
+            sql = """
+                update game
+                set level = %s
+                where username = %s;
+                """
+            cur.execute(sql, (level, username))
+            conn.commit()
             pygame.mixer.music.load('gameover.mp3')
             pygame.mixer.music.play()
             screen.fill(BLACK)
@@ -61,9 +98,15 @@ class Snake:
             pygame.display.update()
             time.sleep(2)
             pygame.quit()
-            pygame.exit()
 
-        if self.elements[0][1] > 580 or self.elements[0][1] < 20:
+        if self.elements[0][1] > 515 or self.elements[0][1] < 45:
+            sql = """
+                update game
+                set level = %s
+                where username = %s;
+                """
+            cur.execute(sql, (level, username))
+            conn.commit()
             pygame.mixer.music.load('gameover.mp3')
             pygame.mixer.music.play()
             screen.fill(BLACK)
@@ -71,33 +114,52 @@ class Snake:
             pygame.display.update()
             time.sleep(2)
             pygame.quit()
-            pygame.exit()
 
     def eat(self, foodx, foody):
         x = self.elements[0][0]
         y = self.elements[0][1]
+        # for big food
+        if score % 10 == 0 and score != 0:
+            if foodx <= x <= foodx + 20 and foody <= y <= foody + 20:
+                return True
+            return False
         if foodx <= x <= foodx + 10 and foody <= y <= foody + 10:
             return True
         return False
 
+
 class Food:
+    global score, level
     def __init__(self):
-        self.x = random.randint(30, 670)
-        self.y = random.randint(30, 470)
+        self.x = random.randint(50, 620)
+        self.y = random.randint(50, 420)
 
     def gen(self):
-        self.x = random.randint(30, 670)
-        self.y = random.randint(30,470)
+        self.x = random.randint(50, 620)
+        self.y = random.randint(50, 420)
 
     def draw(self):
-        pygame.draw.rect(screen, BLACK, (self.x, self.y, 10, 10))
+        pygame.draw.rect(screen, RED, (self.x, self.y, 10, 10))
 
-score = 0
-level = 0
+class Food1:
+    global score, level
+    def __init__(self):
+        self.x = random.randint(50, 620)
+        self.y = random.randint(50, 420)
+
+    def gen(self):
+        self.x = random.randint(50, 620)
+        self.y = random.randint(50, 420)
+
+    def draw(self):
+        if score % 10 == 0 and score != 0:
+            pygame.draw.rect(screen, RED, (self.x, self.y, 20, 20))
+# for level
 def show_level(x, y):
     global level
     s = font1.render(f'{level}', True, BLACK)
     screen.blit(s, (x, y))
+# for score
 def show_score(x, y):
     global score
     s = font1.render(f'{score}', True, BLACK)
@@ -105,19 +167,29 @@ def show_score(x, y):
 
 snake1 = Snake(100, 100)
 food = Food()
+food1 = Food1()
+
 
 running = True
+
 FPS = 30
 d = 5
 
-clock = pygame.time.Clock()
 
 while running:
+    screen.fill(WHITE)
     clock.tick(snake1.speed)
-    show_score(795, 20)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            print(level)
+            sql = """
+                update game
+                set level = %s
+                where username = %s;
+                """
+            cur.execute(sql, (level, username))
+            conn.commit()
+            pygame.quit()
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 running = False
@@ -145,18 +217,22 @@ while running:
         if score % 5 == 0:
             pygame.mixer.Sound('newlevel.mp3').play()
             level += 1
+    if snake1.eat(food1.x, food1.y):
+        snake1.is_add = True
+        score += 3
+        pygame.mixer.Sound('food.mp3').play()
+        food1.gen()
 
+    start_ticks = pygame.time.get_ticks()
     snake1.move()
-    screen.fill(BLACK)
-    screen.blit(background, (0, 0))
     snake1.draw()
     food.draw()
-    screen.blit(levele, (700, 40))
-    screen.blit(scoree, (700, 20))
+    food1.draw()
+    screen.blit(levele, (700, 0))
+    screen.blit(scorere, (700, 20))
+    pygame.draw.rect(screen, BLACK, (40, 40, 720, 520), 2)
     show_score(775, 20)
-    show_level(770, 40)
-    # pygame.draw.line(screen, RED, (5, 5), (795, 5), 3)
-    pygame.draw.rect(screen, RED, (5, 5, 790, 580), 3)
-    pygame.display.update()
+    show_level(770, 0)
+    pygame.display.flip()
 
 pygame.quit()

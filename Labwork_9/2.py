@@ -3,14 +3,14 @@ import pygame, time
 
 pygame.init()
 
+food_event = pygame.USEREVENT + 1 
+pygame.time.set_timer(food_event, 9000)
+
 BLUE = (0, 0, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-OLIVE = (128, 128, 0)
-BROWN = (150, 75, 0)
-start=time.time()
 
 screen = pygame.display.set_mode((800, 600))
 background = pygame.transform.smoothscale(pygame.image.load('bk2.jpg'), (800, 600))
@@ -55,7 +55,7 @@ class Snake:
         self.elements[0][0] += self.dx
         self.elements[0][1] += self.dy
 
-        if self.elements[0][0] > 795 or self.elements[0][0] < 5:
+        if self.elements[0][0] > 790 or self.elements[0][0] < 20:
             pygame.mixer.music.load('gameover.mp3')
             pygame.mixer.music.play()
             screen.fill(BLACK)
@@ -65,7 +65,7 @@ class Snake:
             pygame.quit()
             pygame.exit()
 
-        if self.elements[0][1] > 595 or self.elements[0][1] < 5:
+        if self.elements[0][1] > 580 or self.elements[0][1] < 20:
             pygame.mixer.music.load('gameover.mp3')
             pygame.mixer.music.play()
             screen.fill(BLACK)
@@ -78,21 +78,22 @@ class Snake:
     def eat(self, foodx, foody):
         x = self.elements[0][0]
         y = self.elements[0][1]
-        if foodx <= x <= foodx + 25 and foody <= y <= foody + 25:
-            return True
-        return False
+        if score % 5 == 0 and score != 0:
+            if foodx <= x <= foodx + 25 and foody <= y <= foody + 25:
+                return True
+            return False
         if foodx <= x <= foodx + 10 and foody <= y <= foody + 10:
             return True
         return False
 
 class Food:
     def __init__(self):
-        self.x = random.randint(0, 700)
-        self.y = random.randint(0, 500)
+        self.x = random.randint(30, 670)
+        self.y = random.randint(30, 470)
 
     def gen(self):
-        self.x = random.randint(0, 700)
-        self.y = random.randint(0, 500)
+        self.x = random.randint(30, 670)
+        self.y = random.randint(30, 470)
 
     def draw(self):
         pygame.draw.rect(screen, BLACK, (self.x, self.y, 10, 10))
@@ -102,12 +103,12 @@ level = 0
 
 class Food1():
     def __init__(self):
-        self.x = random.randint(0, 700)
-        self.y = random.randint(0, 500)
+        self.x = random.randint(30, 670)
+        self.y = random.randint(30, 470)
 
     def gen(self):
-        self.x = random.randint(0, 700)
-        self.y = random.randint(0, 500)
+        self.x = random.randint(30, 670)
+        self.y = random.randint(30, 470)
 
     def draw(self):
         if score % 5 == 0 and score != 0:
@@ -139,6 +140,8 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        if event.type == food_event:
+            food.gen()    
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 running = False
@@ -180,10 +183,11 @@ while running:
         food1.draw()
     else:
         food.draw()
-    screen.blit(levele, (700, 0))
-    screen.blit(scoree, (700, 20))
-    show_score(775, 20)
-    show_level(770, 0)
+    screen.blit(levele, (700, 20))
+    screen.blit(scoree, (700, 40))
+    show_score(775, 40)
+    show_level(770, 20)
+    pygame.draw.rect(screen, RED, (5, 5, 790, 580), 3)
     pygame.display.update()
 
 pygame.quit()
